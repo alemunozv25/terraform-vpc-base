@@ -5,7 +5,6 @@ provider "aws" {
 locals {
   app_name        = "my-app"
   instance_type   = "t3.micro"
-  # subnet_cidr     = "10.2.0.0/24"
   vpc_cidr        = "10.2.0.0/16"
   security_group  = "${local.app_name}-security-group"
   key_pair_name   = "my-app-key-pair"  # Replace with your actual SSH key pair name
@@ -174,6 +173,13 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -279,20 +285,12 @@ resource "aws_launch_template" "my_app_lt" {
     subnet_id                   = aws_subnet.private[0].id
   }
 
-  # user_data = base64encode("${path.module}/user_data.tpl")
-  # user_data = base64(data.template_file.user_data.rendered)
-  # user_data = base64encode(templatefile("${path.module}/user_data.tpl", {
-  #   instance_id   = "i-xxxxxxxxxxxxxxxxx" # Replace with a real instance ID for testing, or leave it dynamic if needed
-  #   instance_type = var.instance_type
-  # }))
   user_data = base64encode(file("${path.module}/user_data.tpl"))
-# )
 }
-
 
 # Create Auto Scaling Group
 resource "aws_autoscaling_group" "my_app_asg" {
-  # name                 = "example-asg"
+  # name                 = "${local.app_name}-asg"
   availability_zones   = [data.aws_availability_zones.available.names[0]]
   # vpc_zone_identifier  = data.aws_subnet_ids.default.ids
   desired_capacity     = 1
@@ -310,11 +308,10 @@ resource "aws_autoscaling_group" "my_app_asg" {
 
   tag {
     key                 = "Name"
-    value               = "example-asg-instance"
+    value               = "${local.app_name}-asg-instance"
     propagate_at_launch = true
   }
 }
-
 
 # Create Application Load Balancer in Public Subnet
 resource "aws_lb" "my_app_lb" {
@@ -327,7 +324,6 @@ resource "aws_lb" "my_app_lb" {
 
   enable_deletion_protection = false
 }
-
 
 # Create Target Group for the Load Balancer
 resource "aws_lb_target_group" "my_app_lb_tg" {
@@ -347,7 +343,6 @@ resource "aws_lb_target_group" "my_app_lb_tg" {
     unhealthy_threshold = 2
   }
 }
-
 
 # Create ALB Listener
 resource "aws_lb_listener" "http" {

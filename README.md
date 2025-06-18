@@ -8,10 +8,10 @@ The code was created to be executed in CLI.
 
 
 # Setting up the AWS configuration
-Make sure that AWS authentication and authorization has been configured either in AWS_CONFIGURE or AWS_CONFIG. 
+Make sure that AWS authentication and authorization has been configured either in AWS_CREDENTIALS or AWS_CONFIG. 
 
 
-# Settings up
+# Execute terraform commands 
 Make sure that terraform has been properly configured.
 
 Use the next commands to initialize, plan and later apply the terraform changes
